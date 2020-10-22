@@ -11,6 +11,8 @@
 
 #include "GAS/AbilitySystem/GASAbilitySystemComponent.h"
 #include "GAS/AbilitySystem/GASAttributeSet.h"
+#include "GAS/AbilitySystem/GASGameplayAbility.h"
+#include <GameplayEffectTypes.h>
 
 //////////////////////////////////////////////////////////////////////////
 // AGASCharacter
@@ -85,6 +87,8 @@ void AGASCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInput
 
 	// VR headset functionality
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AGASCharacter::OnResetVR);
+
+	BindGASInputs(); // <- include binds here too
 }
 
 
@@ -109,6 +113,51 @@ void AGASCharacter::InitializeAttributes()
 			// Apply the effect to self
 			FActiveGameplayEffectHandle GEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}
+	}
+}
+
+void AGASCharacter::GiveAbilities()
+{	// Abilities are given only by the server
+	if (HasAuthority() && AbilitySystemComponent)
+	{
+		for (TSubclassOf<UGASGameplayAbility>& StartupAbility : DefaultAbilities)
+		{
+			AbilitySystemComponent->GiveAbility(
+				FGameplayAbilitySpec(StartupAbility, 1, static_cast<uint32>(StartupAbility.GetDefaultObject()->AbilityInputID), this)
+			);
+		}
+	}
+}
+
+void AGASCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
+	InitializeAttributes();
+
+	GiveAbilities(); // Only in the server 
+}
+
+void AGASCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
+	InitializeAttributes();
+
+	// Bind inputs
+	BindGASInputs();
+}
+
+void AGASCharacter::BindGASInputs()
+{
+	if (AbilitySystemComponent && InputComponent)
+	{
+		const FGameplayAbilityInputBinds Binds("Confirm", "Cancel", "EGASAbilityInputID", static_cast<uint32>(EGASAbilityInputID::Confirm), static_cast<uint32>(EGASAbilityInputID::Cancel));
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Binds);
 	}
 }
 

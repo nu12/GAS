@@ -42,9 +42,22 @@ public:
 
 	virtual void InitializeAttributes();
 
+	virtual void GiveAbilities();
+
+	/* Initialize the abilities both in the server and in the client */
+	virtual void PossessedBy(AController* NewController) override; // Called in the server
+
+	virtual void OnRep_PlayerState() override; // Called in the client 
+
+	virtual void BindGASInputs();
+
 	// Effect to initialize default attribute values
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
 		TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
+
+	// Effect to initialize default abilities
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
+		TArray<TSubclassOf<class UGASGameplayAbility>> DefaultAbilities;
 
 protected:
 
