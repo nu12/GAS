@@ -93,6 +93,25 @@ UAbilitySystemComponent* AGASCharacter::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
+void AGASCharacter::InitializeAttributes()
+{
+	if (AbilitySystemComponent && Attributes)
+	{
+		// Context of the effect (who is the instigator, actor, target, etc.)
+		FGameplayEffectContextHandle EffectContextHandle = AbilitySystemComponent->MakeEffectContext();
+		EffectContextHandle.AddSourceObject(this);
+
+		// Spec
+		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(DefaultAttributeEffect, 1, EffectContextHandle);
+
+		if (SpecHandle.IsValid())
+		{
+			// Apply the effect to self
+			FActiveGameplayEffectHandle GEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
+	}
+}
+
 void AGASCharacter::OnResetVR()
 {
 	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();

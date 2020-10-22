@@ -40,6 +40,12 @@ public:
 	// This method needs to be implemented and return the character's AbilitySystemComponent
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	virtual void InitializeAttributes();
+
+	// Effect to initialize default attribute values
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
+		TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
+
 protected:
 
 	/** Resets HMD orientation in VR. */
